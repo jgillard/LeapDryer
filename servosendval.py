@@ -2,7 +2,7 @@ from serial.tools import list_ports
 from time import sleep 
 import serial
 
-port = [s for s in zip(*list_ports.comports())[0] if 'iPhone' in s]
+port = [s for s in zip(*list_ports.comports())[0] if 'usbmodem' in s]
 
 if not port:
 	print "Arduino not detected"

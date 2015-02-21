@@ -9,7 +9,7 @@ void setup() {
   Serial.begin(9600);
   servo.attach(servoPin);
   servo.write(degVal);
-  Serial.println("yolo");
+  Serial.println("Ready");
 }
 
 void loop() {
