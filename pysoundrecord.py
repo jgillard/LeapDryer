@@ -9,6 +9,7 @@ t1 = []
 audio = []
 rms = []
 repeats = 10
+recordReady = 1
 
 p = pyaudio.PyAudio()
 
@@ -30,6 +31,7 @@ def stopRecord(stream):
 	stream.close()
 
 def newFrame(s):
+	recordReady = 0
 	t1.append(time.time())
 	stopRecord(s)
 	# finds index of previous 'newFrame'
@@ -51,21 +53,26 @@ def newFrame(s):
 		rms.append(audioop.rms(frameAudio, 2))
 	#restart recording
 	s = startRecord()
+	recordReady = 1
 	return s
 		
 # MAIN PROGRAM
-print "Starting"
-t0 = time.time()
-stream = startRecord()
-#simulate newFrame() function calls
-for i in range (1, repeats + 1):
-	time.sleep(1)
-	stream = newFrame(stream)
-print "Finished"
-p.terminate()
-# normalise loop times
-t2 = [t-t0 for t in t1]
-print t2
-print 'Av. loop time:', (t2[len(t2)-1] - repeats)/repeats
-print 'RMS values:', rms
-print 'Current FPS:', math.trunc(1/((t2[len(t2)-1] - repeats)/repeats)), 'Hz'
+def main():
+	print "Starting"
+	t0 = time.time()
+	stream = startRecord()
+	#simulate newFrame() function calls
+	for i in range (1, repeats + 1):
+		time.sleep(1)
+		stream = newFrame(stream)
+	print "Finished"
+	p.terminate()
+	# normalise loop times
+	t2 = [t-t0 for t in t1]
+	print t2
+	print 'Av. loop time:', (t2[len(t2)-1] - repeats)/repeats
+	print 'RMS values:', rms
+	print 'Current FPS:', math.trunc(1/((t2[len(t2)-1] - repeats)/repeats)), 'Hz'
+
+if __name__ == "__main__":
+    main()
