@@ -3,3 +3,5 @@
 *.wav
 .DS_Store
 /lib/
+*.sublime-project
+*.sublime-workspace
