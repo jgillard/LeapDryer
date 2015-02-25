@@ -1,8 +1,8 @@
 import sys
 import os
 import pyaudio
-import pysoundrecord
-import thread
+import threading
+from pysoundrecord import processData, audioStopStart, startRecord
 from servosendval import findPort as getArduinoPort
 
 # find Windows/Unix Leap libraries
@@ -19,9 +19,8 @@ import Leap
 
 class Listener(Leap.Listener):
 
-    recording = 0
     p = pyaudio.PyAudio()
-    stream = pysoundrecord.startRecord()
+    stream = startRecord()
     s = getArduinoPort()
 
     def on_init(self, controller):
@@ -29,7 +28,6 @@ class Listener(Leap.Listener):
 
     def on_connect(self, controller):
         print "Connected"
-        Listener.recording = 1
 
     def on_disconnect(self, controller):
         print "Disconnected"
@@ -39,11 +37,10 @@ class Listener(Leap.Listener):
 
     def on_frame(self, controller):
         # pysoundrecord function
-        print 'on_frame: ', Listener.recording
-        if Listener.recording == 1:
-            [Listener.stream, Listener.recording] = pysoundrecord.newFrame(
-                Listener.stream, Listener.recording)
-
+        print 'isStopped: ', Listener.stream.is_stopped()
+        if Listener.stream.is_stopped() == False:
+            Listener.stream = audioStopStart(Listener.stream)
+            t = threading.Thread(target=processData(), args=())
         # Get the most recent frame and report some basic information
         frame = controller.frame()
         print "Frame id: %d, timestamp: %d, hands: %d, fingers: %d" \
@@ -101,7 +98,6 @@ class Listener(Leap.Listener):
 
 def main():
 
-    t1 = []
     audio = []
     rms = []
 

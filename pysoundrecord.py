@@ -7,12 +7,12 @@ import pyaudio
 import audioop
 import time
 import math
+import threading
 
 t1 = []
 audio = []
 rms = []
 repeats = 10
-recording = 1
 
 p = pyaudio.PyAudio()
 
@@ -56,15 +56,12 @@ def processData():
         frameAudio = ''.join(audio[frameStart:frameEnd])
         rms.append(audioop.rms(frameAudio, 2))
         print rms[-1]
-    recording = 1
 
 
-def newFrame(s, recording):
-    recording = 0
-    # t1.append(time.time())
+def audioStopStart(s):
     stopRecord(s)
     s = startRecord()
-    return s, recording
+    return s
 
 
 def main():
@@ -74,15 +71,19 @@ def main():
     # simulate newFrame() function calls
     for i in range(1, repeats + 1):
         time.sleep(1)
-        [stream, x] = newFrame(stream, 0)
+        # next two lines may not be working
+        stream = audioStopStart(stream)
+        t = threading.Thread(target=processData(), args=())
     print "Finished"
     p.terminate()
     # normalise loop times
-    t2 = [t - t0 for t in t1]
-    print t2
-    print 'Av. loop time:', (t2[len(t2) - 1] - repeats) / repeats
-    print 'RMS values:', rms
-    print 'Current FPS:', math.trunc(1 / ((t2[len(t2) - 1] - repeats) / repeats)), 'Hz'
-
+    if 't2' in locals() or 't2' in globals():
+        t2 = [t - t0 for t in t1]
+        print t2
+        print 'Av. loop time:', (t2[len(t2) - 1] - repeats) / repeats
+        print 'RMS values:', rms
+        print 'FPS:', math.trunc(1 / ((t2[len(t2) - 1] - repeats) / repeats)), 'Hz'
+    else:
+        "Timer not working"
 if __name__ == "__main__":
     main()
