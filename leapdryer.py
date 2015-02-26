@@ -2,7 +2,8 @@ import sys
 import os
 import pyaudio
 import threading
-from pysoundrecord import processData, audioStopStart, startRecord
+import time
+from pysoundrecord import processData
 from servosendval import findPort as getArduinoPort
 
 # find Windows/Unix Leap libraries
@@ -17,11 +18,62 @@ else:
 import Leap
 
 
-class Listener(Leap.Listener):
+s = getArduinoPort()
+audio = []
+rms = []
+t0 = time.clock()
+p = pyaudio.PyAudio()
 
-    p = pyaudio.PyAudio()
-    stream = startRecord()
-    s = getArduinoPort()
+
+# BEGIN COPIED FROM PYSOUNDRECORD
+def callback(in_data, frame_count, time_info, status):
+    audio.append(in_data)
+    return (in_data, pyaudio.paContinue)
+
+
+def startRecord():
+    stream = p.open(format=pyaudio.paInt16,
+                    channels=1,
+                    rate=44100,
+                    input=True,
+                    stream_callback=callback)
+    stream.start_stream()
+    return stream
+
+
+def audioStopStart(s):
+    s.stop_stream()
+    s.close()
+    s = startRecord()
+    t = time.clock()
+    return s, t
+# END COPIED FROM PYSOUNDRECORD
+
+
+def audioCode(audio, stream, t0):
+    # check recording started and > 0.1 s of audio
+    if (stream.is_stopped() == False
+            and (time.clock() - t0) > 0.05):
+        # print audio XXX
+        # restart stream and start clock
+        stream, t0 = audioStopStart(stream)
+        # start processing thread
+        t = threading.Thread(target=processData,
+                             args=(audio, rms))
+        t.start()
+        return audio, stream, t0, 0
+    else:
+        # return if not recording or audio segment < 0.1 s
+        # print "Skipping frame", "\t", "isStopped:", \
+        #     stream.is_stopped(), "\t", time.clock() - t0
+        skip = 1
+        return audio, stream, t0, skip
+
+
+stream = startRecord()
+
+
+class Listener(Leap.Listener):
 
     def on_init(self, controller):
         print "Initialized"
@@ -36,12 +88,19 @@ class Listener(Leap.Listener):
         print "Exited"
 
     def on_frame(self, controller):
-        # pysoundrecord function
-        print 'isStopped: ', Listener.stream.is_stopped()
-        if Listener.stream.is_stopped() == False:
-            Listener.stream = audioStopStart(Listener.stream)
-            t = threading.Thread(target=processData(), args=())
-        # Get the most recent frame and report some basic information
+        global audio, stream, t0
+        # Get the most recent frame and return if no hands detected
+        frame = controller.frame()
+        if frame.hands.is_empty:
+            return
+
+        # BEGIN AUDIO CODE
+        audio, stream, t0, skip = audioCode(audio, stream, t0)
+        if skip:
+            return
+        # END AUDIO CODE
+
+        # Report some basic frame information
         frame = controller.frame()
         print "Frame id: %d, timestamp: %d, hands: %d, fingers: %d" \
             % (frame.id, frame.timestamp, len(frame.hands), len(frame.fingers))
@@ -85,21 +144,18 @@ class Listener(Leap.Listener):
                 averageP, averageR, averageY)
 
             # send data to over serial port
-            if Listener.s != 0:
+            if s != 0:
                 payload = str(int(averageY + 80))
                 print payload
-                Listener.s.write(payload)
-                Listener.s.write('\n')
-                # print Listener.s.readline()
+                s.write(payload)
+                s.write('\n')
+                # print s.readline()
 
             # if no hands detected
-            # if (frame.hands.is_empty and frame.gestures().is_empty):
+            # if (frame.hands.is_empty):
 
 
 def main():
-
-    audio = []
-    rms = []
 
     # Create a listener and controller
     listener = Listener()
@@ -117,7 +173,7 @@ def main():
     finally:
         # Remove the listener when done
         controller.remove_listener(listener)
-        Listener.p.terminate()
+        p.terminate()
 
 if __name__ == "__main__":
     main()

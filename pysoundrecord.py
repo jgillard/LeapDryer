@@ -18,8 +18,9 @@ p = pyaudio.PyAudio()
 
 
 def callback(in_data, frame_count, time_info, status):
+    print "callback"
     audio.append(in_data)
-    return (in_data, pyaudio.paContinue)
+    return (audio, pyaudio.paContinue)
 
 
 def startRecord():
@@ -37,31 +38,33 @@ def stopRecord(stream):
     stream.close()
 
 
-def processData():
+def processData(audio, rms):
     # finds index of previous 'newFrame'
     try:
-        frameStart = (len(audio) - 1) - audio[::-1].index('newFrame')
+        frameStart = (len(audio) - 1) - audio[::-1].index("newFrame")
     except ValueError:
         if len(audio) < 100:
             frameStart = 0
         else:
             print "Error finding 'newFrame'"
     # add new marker
-    audio.append('newFrame')
+    audio.append("newFrame")
     frameEnd = len(audio) - 1
-    print 'Audio Chunk: ', frameStart, frameEnd
+    print "\nAudio Chunk: ", frameStart, frameEnd
     # make sure there is sufficient data (problem with 1st frame)
     if frameEnd > 1:
         # extract audio chunk and rms()
         frameAudio = ''.join(audio[frameStart:frameEnd])
         rms.append(audioop.rms(frameAudio, 2))
-        print rms[-1]
+        print "RMS:", rms[-1]
+    return rms
 
 
 def audioStopStart(s):
     stopRecord(s)
     s = startRecord()
-    return s
+    t = time.clock()
+    return s, t
 
 
 def main():
@@ -80,9 +83,9 @@ def main():
     if 't2' in locals() or 't2' in globals():
         t2 = [t - t0 for t in t1]
         print t2
-        print 'Av. loop time:', (t2[len(t2) - 1] - repeats) / repeats
-        print 'RMS values:', rms
-        print 'FPS:', math.trunc(1 / ((t2[len(t2) - 1] - repeats) / repeats)), 'Hz'
+        print "Av. loop time:", (t2[len(t2) - 1] - repeats) / repeats
+        print "RMS values:", rms
+        print "Rate:", math.trunc(1 / ((t2[len(t2) - 1] - repeats) / repeats)), "Hz"
     else:
         "Timer not working"
 if __name__ == "__main__":
