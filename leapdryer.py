@@ -70,38 +70,8 @@ def audioCode(audio, stream, t0):
         return audio, stream, t0, skip
 
 
-stream = startRecord()
-
-
-class Listener(Leap.Listener):
-
-    def on_init(self, controller):
-        print "Initialized"
-
-    def on_connect(self, controller):
-        print "Connected"
-
-    def on_disconnect(self, controller):
-        print "Disconnected"
-
-    def on_exit(self, controller):
-        print "Exited"
-
-    def on_frame(self, controller):
-        global audio, stream, t0
-        # Get the most recent frame and return if no hands detected
-        frame = controller.frame()
-        if frame.hands.is_empty:
-            return
-
-        # BEGIN AUDIO CODE
-        audio, stream, t0, skip = audioCode(audio, stream, t0)
-        if skip:
-            return
-        # END AUDIO CODE
-
+def leapCode(controller, frame):
         # Report some basic frame information
-        frame = controller.frame()
         print "Frame id: %d, timestamp: %d, hands: %d, fingers: %d" \
             % (frame.id, frame.timestamp, len(frame.hands), len(frame.fingers))
 
@@ -153,6 +123,38 @@ class Listener(Leap.Listener):
 
             # if no hands detected
             # if (frame.hands.is_empty):
+
+
+stream = startRecord()
+
+
+class Listener(Leap.Listener):
+
+    def on_init(self, controller):
+        print "Initialized"
+
+    def on_connect(self, controller):
+        print "Connected"
+
+    def on_disconnect(self, controller):
+        print "Disconnected"
+
+    def on_exit(self, controller):
+        print "Exited"
+
+    def on_frame(self, controller):
+        global audio, stream, t0
+        # Get the most recent frame and return if no hands detected
+        frame = controller.frame()
+        if frame.hands.is_empty:
+            return
+        # AUDIO
+        audio, stream, t0, skip = audioCode(audio, stream, t0)
+        if skip:
+            return
+        # LEAP
+        leapCode(controller, frame)
+
 
 
 def main():

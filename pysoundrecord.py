@@ -18,9 +18,8 @@ p = pyaudio.PyAudio()
 
 
 def callback(in_data, frame_count, time_info, status):
-    print "callback"
     audio.append(in_data)
-    return (audio, pyaudio.paContinue)
+    return (in_data, pyaudio.paContinue)
 
 
 def startRecord():
@@ -33,9 +32,12 @@ def startRecord():
     return stream
 
 
-def stopRecord(stream):
-    stream.stop_stream()
-    stream.close()
+def audioStopStart(s):
+    s.stop_stream()
+    s.close()
+    s = startRecord()
+    t = time.clock()
+    return s, t
 
 
 def processData(audio, rms):
@@ -60,23 +62,17 @@ def processData(audio, rms):
     return rms
 
 
-def audioStopStart(s):
-    stopRecord(s)
-    s = startRecord()
-    t = time.clock()
-    return s, t
-
-
 def main():
     print "Starting"
     t0 = time.time()
-    stream = startRecord()
+    s = startRecord()
     # simulate newFrame() function calls
     for i in range(1, repeats + 1):
         time.sleep(1)
         # next two lines may not be working
-        stream = audioStopStart(stream)
-        t = threading.Thread(target=processData(), args=())
+        s, t0 = audioStopStart(s)
+        t = threading.Thread(target=processData, args=(audio, rms))
+        t.start()
     print "Finished"
     p.terminate()
     # normalise loop times
