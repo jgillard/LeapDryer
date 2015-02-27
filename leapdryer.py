@@ -142,6 +142,7 @@ class Listener(Leap.Listener):
     def on_exit(self, controller):
         print "Exited"
 
+    @profile
     def on_frame(self, controller):
         global audio, stream, t0
         # Get the most recent frame and return if no hands detected
@@ -154,7 +155,6 @@ class Listener(Leap.Listener):
             return
         # LEAP
         leapCode(controller, frame)
-
 
 
 def main():
