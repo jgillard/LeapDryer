@@ -5,90 +5,10 @@
     <script src="http://js.leapmotion.com/leap-0.6.4.min.js"></script>
     <script src="http://js.leapmotion.com/leap-plugins-0.1.10.js"></script>
     <script src="http://js.leapmotion.com/leap.rigged-hand-0.1.6.min.js"></script>
-
-    <style class="codepen">
-      body{
-        font-family: 'Helvetica Neue', Helvetica, Arial, 'Lucida Grande', sans-serif;
-      }
-      .title{
-        font-size: 50px;
-        color: #005d98;
-        text-align: left;
-        position: fixed;
-      }
-      .confidence{
-        font-size: 20px;
-        color: #005d98;
-        text-align: right;
-      }
-      /* #DRY{
-        font-size: 200px;
-        color: red;
-        text-align: right;
-        position: relative;
-        top: 10%;        
-        visibility: hidden;       
-        background-color:rgba(255,0,0,0.5); 
-      } */
-      .output{
-        font-size: 50px;
-        color: #005d98;
-        text-align: left;
-        position: fixed;
-      }
-      #outputXX{
-        bottom: 250px;
-      }
-      #outputYY{
-        bottom: 200px;
-      }
-      #outputZZ{
-        bottom: 150px;
-      }
-      #outputR{
-        bottom: 100px;
-      }
-      #outputP{
-        bottom: 50px;
-      }
-      #outputY{
-        bottom: 0px;
-      }
-      .progress{
-        position: fixed;
-        left: 20%;
-        height: 30px;
-        width: 0%;
-      }
-      #progressXX {
-        background: #ae44ff;
-        bottom: 260;
-      }
-      #progressYY {
-        background: #95ff44;
-        bottom: 210;
-      }
-      #progressZZ {
-        background: #ff7c44;
-        bottom: 160;
-      }
-      #progressR {
-        background: #005d98;
-        bottom: 110;
-      }
-      #progressP {
-        background: #980011;
-        bottom: 60;
-      }
-      #progressY {
-        background: #988700;
-        bottom: 10;
-      }
-    </style>
+    <link rel="stylesheet" type="text/css" href="JSdemo.css">
   </head>
 
   <body>
-    <!-- <div" class="title>I F*CKING <3 HAND DRYERS</div> -->
     <div class="title">LeapDryer JS Visualiser</div>
     <div class="confidence" >Confidence:</div>
     <div class="confidence" id="confVal"></div>
@@ -106,47 +26,5 @@
     <div id="outputY" class="output"></div>
     <div id="progressY" class="progress"></div>
   </body>
-
-  <script type="text/javascript">    
-
-    // Set up the controller:
-    Leap.loop({background: true}, {
-
-        hand: function(hand){
-
-                  <!-- RPY -->
-                  confVal.innerHTML = hand.confidence;
-                  outputR.innerHTML = "R ".concat(parseInt(hand.palmNormal[0]*90), "*");
-                  progressR.style.width = 40 + hand.palmNormal[0] * 40 + '%';
-                  outputP.innerHTML = "P ".concat(parseInt(hand.direction[1].toPrecision(2)*90), "*");
-                  progressP.style.width = 40 + hand.direction[1] * 40 + '%';
-                  outputY.innerHTML = "Y ".concat(parseInt(hand.direction[0].toPrecision(2)*90), "*");
-                  progressY.style.width = 40 + hand.direction[0] * 40 + '%';
-
-                  <!-- XYZ -->
-                  outputXX.innerHTML = "X ".concat(-(parseInt(hand.palmPosition[0])));
-                  progressXX.style.width = 40 + -(hand.palmPosition[0]) * 0.2 + '%';
-                  outputYY.innerHTML = "Y ".concat(parseInt(hand.palmPosition[2]));
-                  progressYY.style.width = (hand.palmPosition[2]) * 0.4 + '%';
-                  outputZZ.innerHTML = "Z ".concat(parseInt(hand.palmPosition[1]));
-                  progressZZ.style.width = hand.palmPosition[1] * 0.2 + '%';
-                  
-                  <!-- popup text -->
-                  /*
-                  if (hand.direction[1].toPrecision(2) > -0.55 && hand.direction[1].toPrecision(2) < -0.45) {
-                    document.getElementById("DRY").style.visibility="visible";
-                  } else {
-                    document.getElementById("DRY").style.visibility="hidden";
-                  } */
-
-              }
-    })
-
-    .use('boneHand', {
-      targetEl: document.body,
-      arm: true,
-      opacity: 0.5
-    });
-
-  </script>
+  <script src="JSdemo.js"></script>
 </html>

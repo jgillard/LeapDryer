@@ -1,0 +1,77 @@
+body{
+  font-family: 'Helvetica Neue', Helvetica, Arial, 'Lucida Grande', sans-serif;
+}
+.title{
+  font-size: 50px;
+  color: #005d98;
+  text-align: left;
+  position: fixed;
+}
+.confidence{
+  font-size: 20px;
+  color: #005d98;
+  text-align: right;
+}
+.output{
+  font-size: 50px;
+  color: #005d98;
+  text-align: left;
+  position: fixed;
+}
+#outputXX{
+  bottom: 250px;
+}
+#outputYY{
+  bottom: 200px;
+}
+#outputZZ{
+  bottom: 150px;
+}
+#outputR{
+  bottom: 100px;
+}
+#outputP{
+  bottom: 50px;
+}
+#outputY{
+  bottom: 0px;
+}
+.progress{
+  position: fixed;
+  left: 20%;
+  height: 30px;
+  width: 0%;
+}
+#progressXX {
+  background: #ae44ff;
+  bottom: 260;
+}
+#progressYY {
+  background: #95ff44;
+  bottom: 210;
+}
+#progressZZ {
+  background: #ff7c44;
+  bottom: 160;
+}
+#progressR {
+  background: #005d98;
+  bottom: 110;
+}
+#progressP {
+  background: #980011;
+  bottom: 60;
+}
+#progressY {
+  background: #988700;
+  bottom: 10;
+}
+/* #DRY{
+  font-size: 200px;
+  color: red;
+  text-align: right;
+  position: relative;
+  top: 10%;        
+  visibility: hidden;       
+  background-color:rgba(255,0,0,0.5); 
+} */
