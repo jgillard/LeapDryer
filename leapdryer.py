@@ -3,7 +3,8 @@ import os
 import pyaudio
 import threading
 import time
-from pysoundrecord import processData
+import argparse
+import audioop
 from servosendval import findPort as getArduinoPort
 
 # find Windows/Unix Leap libraries
@@ -23,6 +24,11 @@ audio = []
 rms = []
 t0 = time.clock()
 p = pyaudio.PyAudio()
+parser = argparse.ArgumentParser()
+parser.add_argument("-d", "--debug", help="show print statements",
+                    type=int, default=0)
+args = parser.parse_args()
+debug = args.debug
 
 
 # BEGIN COPIED FROM PYSOUNDRECORD
@@ -47,14 +53,34 @@ def audioStopStart(s):
     s = startRecord()
     t = time.clock()
     return s, t
+
+
+def processData(audio, rms):
+    # finds index of previous 'newFrame'
+    try:
+        frameStart = (len(audio) - 1) - audio[::-1].index("newFrame")
+    except ValueError:
+        if len(audio) < 100:
+            frameStart = 0
+        else:
+            print "Error finding 'newFrame'"
+    # add new marker
+    audio.append("newFrame")
+    frameEnd = len(audio) - 1
+    print "\nAudio Chunk: ", frameStart, frameEnd
+    # make sure there is sufficient data (problem with 1st frame)
+    if frameEnd > 1:
+        # extract audio chunk and rms()
+        frameAudio = ''.join(audio[frameStart:frameEnd])
+        rms.append(audioop.rms(frameAudio, 2))
+        print "RMS:", rms[-1]
+    return rms
 # END COPIED FROM PYSOUNDRECORD
 
 
 def audioCode(audio, stream, t0):
     # check recording started and > 0.1 s of audio
-    if (stream.is_stopped() == False
-            and (time.clock() - t0) > 0.05):
-        # print audio XXX
+    if (stream.is_stopped() == False):
         # restart stream and start clock
         stream, t0 = audioStopStart(stream)
         # start processing thread
@@ -71,25 +97,28 @@ def audioCode(audio, stream, t0):
 
 
 def leapCode(controller, frame):
-        # Report some basic frame information
+    # Report some basic frame information
+    if (debug):
         print "Frame id: %d, timestamp: %d, hands: %d, fingers: %d" \
             % (frame.id, frame.timestamp, len(frame.hands), len(frame.fingers))
 
-        # Process hand(s)
-        for hand in frame.hands:
+    # Process hand(s)
+    for hand in frame.hands:
 
-            handType = "Left hand" if hand.is_left else "Right hand"
+        handType = "Left hand" if hand.is_left else "Right hand"
+        if (debug):
             print "  %s, id %d, position: %s" % (
                 handType, hand.id, hand.palm_position)
 
-            # Get the hand's normal vector and direction
-            normal = hand.palm_normal
-            direction = hand.direction
+        # Get the hand's normal vector and direction
+        normal = hand.palm_normal
+        direction = hand.direction
 
-            # Calculate the hand's pitch, roll, and yaw angles
-            pitch = direction.pitch * Leap.RAD_TO_DEG
-            roll = normal.roll * Leap.RAD_TO_DEG
-            yaw = direction.yaw * Leap.RAD_TO_DEG
+        # Calculate the hand's pitch, roll, and yaw angles
+        pitch = direction.pitch * Leap.RAD_TO_DEG
+        roll = normal.roll * Leap.RAD_TO_DEG
+        yaw = direction.yaw * Leap.RAD_TO_DEG
+        if (debug):
             print "  Pitch: %f *, Roll: %f *, Yaw: %f *" % (
                 roll, pitch, yaw)
 
@@ -110,8 +139,9 @@ def leapCode(controller, frame):
             averageP = averageP * Leap.RAD_TO_DEG / count
             averageR = averageR * Leap.RAD_TO_DEG / count
             averageY = averageY * Leap.RAD_TO_DEG / count
-            print "  Av P: %f *, Av R: %f *, Av Y: %f *" % (
-                averageP, averageR, averageY)
+            if (debug):
+                print "  Av P: %f *, Av R: %f *, Av Y: %f *" % (
+                    averageP, averageR, averageY)
 
             # send data to over serial port
             if s != 0:
