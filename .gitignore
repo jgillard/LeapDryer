@@ -6,3 +6,5 @@
 *.sublime-project
 *.sublime-workspace
 *.lprof
+
+*.csv

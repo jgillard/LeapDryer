@@ -7,6 +7,8 @@ import threading
 import time
 import argparse
 import audioop
+import csv
+import datetime
 from servosendval import findPort as getArduinoPort
 
 # find Windows/Unix Leap libraries
@@ -20,7 +22,6 @@ else:
     sys.path.insert(0, lib_dir)
 import Leap
 
-
 s = getArduinoPort()
 audio = []
 rms = []
@@ -33,6 +34,7 @@ args = parser.parse_args()
 debug = args.debug
 lock = threading.Lock()
 prevFrame = 0
+csvData = []
 
 
 # BEGIN COPIED FROM PYSOUNDRECORD
@@ -143,7 +145,8 @@ def leapCode(controller, frame):
             lock.acquire()
             print "frameDiff: %i" % frameDiff
             print "Frame id: %d, timestamp: %d, hands: %d, fingers: %d" % \
-                (frame.id, frame.timestamp, len(frame.hands), len(frame.fingers))
+                (frame.id, frame.timestamp,
+                 len(frame.hands), len(frame.fingers))
             print "  %s, id %d, position: %s" % (
                 handType, hand.id, hand.palm_position)
             print "  Pitch: %f *, Roll: %f *, Yaw: %f *" % (
@@ -151,6 +154,14 @@ def leapCode(controller, frame):
             print "  Av P: %f *, Av R: %f *, Av Y: %f *" % (
                 averageP, averageR, averageY)
             lock.release()
+
+        x = hand.palm_position[0]
+        y = hand.palm_position[1]
+        z = hand.palm_position[2]
+        csvLine = [frame.id, frame.timestamp, len(frame.hands),
+                   len(frame.fingers), handType, hand.id, x, y, z,
+                   averageP, averageR, averageY]
+        csvData.append(csvLine)
 
         prevFrame = frame.id
         # send data to over serial port
@@ -160,9 +171,6 @@ def leapCode(controller, frame):
             s.write(payload)
             s.write('\n')
             # print s.readline()
-
-
-stream = startRecord()
 
 
 class Listener(Leap.Listener):
@@ -193,6 +201,9 @@ class Listener(Leap.Listener):
         leapCode(controller, frame)
 
 
+stream = startRecord()
+
+
 def main():
 
     # Create a listener and controller
@@ -209,6 +220,14 @@ def main():
     except KeyboardInterrupt:
         pass
     finally:
+        fileName = datetime.datetime.now().strftime('%Y-%m-%d@%H-%M-%S')
+        headers = ["frame.id", "frame.timestamp", "len(frame.hands)",
+                   "len(frame.fingers)", "handType", "hand.id",
+                   "hand.palm_position", "averageP", "averageR", "averageY"]
+        with open('%s.csv' % fileName, 'wb') as f:
+            writer = csv.writer(f)
+            writer.writerow(headers)
+            writer.writerows(csvData)
         # Remove the listener when done
         controller.remove_listener(listener)
         p.terminate()
