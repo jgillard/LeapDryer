@@ -1,7 +1,7 @@
 #include <Servo.h>
 Servo servo;
 int servoPin = 6;
-int degVal = 0;
+int degVal = 80;
 int prevVal = 0;
 
 void setup() {
@@ -28,9 +28,9 @@ void loop() {
         } 
         else {
           for (int i=0;i<10;i++) {
-            servo.write(160);
+            servo.write(130);
             delay(500);
-            servo.write(0);
+            servo.write(90);
             delay(500);
           }
         }

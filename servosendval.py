@@ -3,14 +3,16 @@ from time import sleep
 import serial
 from twitter import *
 
+
 # def twitAuth():
 #     t = Twitter(
-#         auth = OAuth('2261857933-6osWHs9QAdpl69yMHLCSpNcty2voBhA1uaEcwue', 
-#             '96ue1lqn9uetCeISQZKtA1ahsODU1tU7VZ8o4xGzWZlYm',
-#             '9VtsP5VUEuWOgQ4wkiXQ',
-#             '3x7IyiJqdqPfS1T17xg41eASz0LMZgQFnSoMnUBnUk')
-#         )
+#         auth = OAuth('2261857933-6osWHs9QAdpl69yMHLCSpNcty2voBhA1uaEcwue',
+#                      '96ue1lqn9uetCeISQZKtA1ahsODU1tU7VZ8o4xGzWZlYm',
+#                      '9VtsP5VUEuWOgQ4wkiXQ',
+#                      '3x7IyiJqdqPfS1T17xg41eASz0LMZgQFnSoMnUBnUk')
+#     )
 #     return t
+
 
 # def getDM(t):
 #     msg = t.direct_messages(count=1)
@@ -37,15 +39,15 @@ def main():
 
     # t = twitAuth()
     # while True:
-    #     msg = getDM(t);
-    #     if(msg.lower() =="louder"):
+    #     msg = getDM(t)
+    #     if(msg.lower() == "louder"):
     #         s.write("130")
     #         s.write('\n')
-    #     elif(msg.lower() =="shut up"):
+    #     elif(msg.lower() == "shut up"):
     #         s.write("80")
     #         s.write('\n')
-    #     sleep(60)
-    
+    #     sleep(5)
+
     while True:
         degrees = raw_input("Enter degree value: ")
         s.write(degrees)
