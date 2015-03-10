@@ -2,14 +2,15 @@
 
 import sys
 import os
+import serial
 import pyaudio
 import threading
-import time
+from time import sleep, clock
 import argparse
 import audioop
 import csv
 import datetime
-from servosendval import findPort as getArduinoPort
+from serial.tools import list_ports
 
 # find Windows/Unix Leap libraries
 if os.name == "nt":
@@ -22,22 +23,22 @@ else:
     sys.path.insert(0, lib_dir)
 import Leap
 
-s = getArduinoPort()
-audio = []
-rms = []
-t0 = time.clock()
-p = pyaudio.PyAudio()
-parser = argparse.ArgumentParser()
-parser.add_argument("-d", "--debug", help="show print statements",
-                    type=int, default=0)
-args = parser.parse_args()
-debug = args.debug
-lock = threading.Lock()
-prevFrame = 0
-csvData = []
+
+def getArduinoPort():
+    port = [s for s in zip(*list_ports.comports())[0] if 'usbmodem' in s]
+    if not port:
+        print "Arduino not detected"
+        return 0
+    else:
+        if (raw_input("ArduiYes or ArduiNo?").lower()) == "y":
+            s = serial.Serial(port[0], 9600)
+            sleep(1)
+            s.write('110\n')
+            return s
+        else:
+            return 0
 
 
-# BEGIN COPIED FROM PYSOUNDRECORD
 def callback(in_data, frame_count, time_info, status):
     audio.append(in_data)
     return (in_data, pyaudio.paContinue)
@@ -64,7 +65,7 @@ def audioStopStart(s):
     thrStop.daemon = True
     thrStop.start()
     s = startRecord()
-    t = time.clock()
+    t = clock()
     return s, t
 
 
@@ -91,12 +92,11 @@ def processData(audio, rms):
         print "RMS:", rms[-1]
         lock.release()
     return rms
-# END COPIED FROM PYSOUNDRECORD
 
 
 def audioCode(audio, stream, t0):
     # check recording started and > 0.1 s of audio
-    if (stream.is_stopped() == False and time.clock() - t0 > 0.01):
+    if (stream.is_stopped() == False and clock() - t0 > 0.01):
         # restart stream and start clock
         stream, t0 = audioStopStart(stream)
         # start processing thread
@@ -110,63 +110,77 @@ def audioCode(audio, stream, t0):
 
 
 def leapCode(controller, frame):
-    # Process hand(s)
-    for hand in frame.hands:
+    if (debug):
+            lock.acquire()
+            print "Frame id: %d, timestamp: %d, hands: %d, fingers: %d" % \
+                (frame.id, frame.timestamp,
+                 len(frame.hands), len(frame.fingers))
+            lock.release()
 
-        handType = "Left hand" if hand.is_left else "Right hand"
+    # Process hand(s)
+    handlist = frame.hands
+    for hand in handlist:
+
+        handType = 0 if hand.is_left else 1
         normal = hand.palm_normal
         direction = hand.direction
         pitch = direction.pitch * Leap.RAD_TO_DEG
         roll = normal.roll * Leap.RAD_TO_DEG
         yaw = direction.yaw * Leap.RAD_TO_DEG
 
-        # Value Smoothing
-        # Average a finger position for the last 10 frames
-        # currently supports 1 hand only
+        # Value Smoothing - average over the last frameDiff frames
         count = 0
-        averageP = 0.0
-        averageR = 0.0
-        averageY = 0.0
+        avP = 0.0
+        avR = 0.0
+        avYw = 0.0
+        avX = 0.0
+        avY = 0.0
+        avZ = 0.0
 
         global prevFrame
         frameDiff = frame.id - prevFrame
         for i in range(0, frameDiff):
             hand_from_frame = controller.frame(i).hand(hand.id)
             if(hand_from_frame.is_valid):
-                averageP = averageP + hand_from_frame.direction.pitch
-                averageR = averageR + hand_from_frame.palm_normal.roll
-                averageY = averageY + hand_from_frame.direction.yaw
+                avR = avR + hand_from_frame.palm_normal.roll
+                avP = avP + hand_from_frame.direction.pitch
+                avYw = avYw + hand_from_frame.direction.yaw
+                avX = avX + hand.palm_position[0]
+                avY = avY + hand.palm_position[2]
+                avZ = avZ + hand.palm_position[1]
                 count += 1
-        averageP = averageP * Leap.RAD_TO_DEG / count
-        averageR = averageR * Leap.RAD_TO_DEG / count
-        averageY = averageY * Leap.RAD_TO_DEG / count
+        avR = avR * Leap.RAD_TO_DEG / count
+        avP = avP * Leap.RAD_TO_DEG / count
+        avYw = avYw * Leap.RAD_TO_DEG / count
+        avX = avX / count
+        avY = avY / count
+        avZ = avZ / count
 
         if (debug):
             lock.acquire()
-            print "frameDiff: %i" % frameDiff
-            print "Frame id: %d, timestamp: %d, hands: %d, fingers: %d" % \
-                (frame.id, frame.timestamp,
-                 len(frame.hands), len(frame.fingers))
-            print "  %s, id %d, position: %s" % (
+            print "handType: %s, id %d, position: %s" % (
                 handType, hand.id, hand.palm_position)
-            print "  Pitch: %f *, Roll: %f *, Yaw: %f *" % (
+            print "  Roll: %f *, Pitch: %f *, Yaw: %f *" % (
                 roll, pitch, yaw)
-            print "  Av P: %f *, Av R: %f *, Av Y: %f *" % (
-                averageP, averageR, averageY)
+            print "  Av R: %f *, Av P: %f *, Av Y: %f *" % (
+                avR, avP, avYw)
+            print "  Av X: %f *, Av Y: %f *, Av Z: %f *" % (
+                avX, avY, avZ)
             lock.release()
 
-        x = hand.palm_position[0]
-        y = hand.palm_position[1]
-        z = hand.palm_position[2]
         csvLine = [frame.id, frame.timestamp, len(frame.hands),
-                   len(frame.fingers), handType, hand.id, x, y, z,
-                   averageP, averageR, averageY]
+                   len(frame.fingers), handType, hand.id, avX, avY, avZ,
+                   avR, avP, avYw]
         csvData.append(csvLine)
 
-        prevFrame = frame.id
+        if len(handlist) == 1:
+            prevFrame = frame.id
+        elif len(handlist) == 2 and hand.id == handlist[1].id:
+            prevFrame = frame.id
+
         # send data to over serial port
         if s != 0:
-            payload = str(int(averageY + 80))
+            payload = str(int(avZ/10 + 110))
             print payload
             s.write(payload)
             s.write('\n')
@@ -201,6 +215,19 @@ class Listener(Leap.Listener):
         leapCode(controller, frame)
 
 
+s = getArduinoPort()
+audio = []
+rms = []
+t0 = clock()
+p = pyaudio.PyAudio()
+parser = argparse.ArgumentParser()
+parser.add_argument("-d", "--debug", help="show print statements",
+                    type=int, default=0)
+args = parser.parse_args()
+debug = args.debug
+lock = threading.Lock()
+prevFrame = 0
+csvData = []
 stream = startRecord()
 
 
@@ -220,14 +247,19 @@ def main():
     except KeyboardInterrupt:
         pass
     finally:
+        # read in arff header data
+        header = []
+        with open('arffHeader.csv', 'rb') as f:
+            reader = csv.reader(f)
+            for row in reader:
+                header.append(row)
+        # write out header and data to csv
         fileName = datetime.datetime.now().strftime('%Y-%m-%d@%H-%M-%S')
-        headers = ["frame.id", "frame.timestamp", "len(frame.hands)",
-                   "len(frame.fingers)", "handType", "hand.id",
-                   "hand.palm_position", "averageP", "averageR", "averageY"]
         with open('%s.csv' % fileName, 'wb') as f:
             writer = csv.writer(f)
-            writer.writerow(headers)
+            writer.writerows(header)
             writer.writerows(csvData)
+
         # Remove the listener when done
         controller.remove_listener(listener)
         p.terminate()
