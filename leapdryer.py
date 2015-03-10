@@ -170,7 +170,7 @@ def leapCode(controller, frame):
 
         csvLine = [frame.id, frame.timestamp, len(frame.hands),
                    len(frame.fingers), handType, hand.id, avX, avY, avZ,
-                   avR, avP, avYw]
+                   avR, avP, avYw, rms[-1]]
         csvData.append(csvLine)
 
         if len(handlist) == 1:
@@ -255,7 +255,7 @@ def main():
                 header.append(row)
         # write out header and data to csv
         fileName = datetime.datetime.now().strftime('%Y-%m-%d@%H-%M-%S')
-        with open('%s.csv' % fileName, 'wb') as f:
+        with open('%s/testData/%s.arff' % (src_dir, fileName), 'wb') as f:
             writer = csv.writer(f)
             writer.writerows(header)
             writer.writerows(csvData)

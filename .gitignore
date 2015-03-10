@@ -7,4 +7,4 @@
 *.sublime-workspace
 *.lprof
 
-*.csv
+*.arff
