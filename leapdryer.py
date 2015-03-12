@@ -13,12 +13,11 @@ import datetime
 from serial.tools import list_ports
 
 # find Windows/Unix Leap libraries
+src_dir = os.getcwd()
 if os.name == "nt":
-    src_dir = sys.path[0]
     arch_dir = "/lib/x64" if sys.maxsize > 2 ** 32 else "lib/x86"
     sys.path.insert(0, os.path.abspath(os.path.join(src_dir, arch_dir)))
 else:
-    src_dir = "/Users/James/Dropbox/ES410 Group Project/LeapDryer"
     lib_dir = os.path.abspath(os.path.join(src_dir, "lib/osx"))
     sys.path.insert(0, lib_dir)
 import Leap
@@ -45,7 +44,8 @@ def callback(in_data, frame_count, time_info, status):
 
 
 def startRecord():
-    stream = p.open(format=pyaudio.paInt16,
+    print "Why does removing this hang the program?"
+    stream = p.open(format=pyaudio.paInt8,
                     channels=1,
                     rate=44100,
                     input=True,
@@ -96,7 +96,7 @@ def processData(audio, rms):
 
 def audioCode(audio, stream, t0):
     # check recording started and > 0.1 s of audio
-    if (stream.is_stopped() == False and clock() - t0 > 0.01):
+    if (stream.is_stopped() == False and clock() - t0 > 0.005):
         # restart stream and start clock
         stream, t0 = audioStopStart(stream)
         # start processing thread
@@ -110,13 +110,6 @@ def audioCode(audio, stream, t0):
 
 
 def leapCode(controller, frame):
-    if (debug):
-            lock.acquire()
-            print "Frame id: %d, timestamp: %d, hands: %d, fingers: %d" % \
-                (frame.id, frame.timestamp,
-                 len(frame.hands), len(frame.fingers))
-            lock.release()
-
     # Process hand(s)
     handlist = frame.hands
     for hand in handlist:
@@ -158,6 +151,9 @@ def leapCode(controller, frame):
 
         if (debug):
             lock.acquire()
+            print "Frame id: %d, timestamp: %d, hands: %d, fingers: %d" % \
+                (frame.id, frame.timestamp,
+                 len(frame.hands), len(frame.fingers))
             print "handType: %s, id %d, position: %s" % (
                 handType, hand.id, hand.palm_position)
             print "  Roll: %f *, Pitch: %f *, Yaw: %f *" % (
@@ -190,16 +186,16 @@ def leapCode(controller, frame):
 class Listener(Leap.Listener):
 
     def on_init(self, controller):
-        print "Initialized"
+        print "Leap Listener Initialized"
 
     def on_connect(self, controller):
-        print "Connected"
+        print "Leap Motion Connected"
 
     def on_disconnect(self, controller):
-        print "Disconnected"
+        print "Leap Motion Disconnected"
 
     def on_exit(self, controller):
-        print "Exited"
+        print "Leap Listener Exited"
 
     def on_frame(self, controller):
         global audio, stream, t0
@@ -259,6 +255,7 @@ def main():
             writer = csv.writer(f)
             writer.writerows(header)
             writer.writerows(csvData)
+        print "Data written out"
 
         # Remove the listener when done
         controller.remove_listener(listener)
