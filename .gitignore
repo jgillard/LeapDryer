@@ -6,5 +6,6 @@
 *.sublime-project
 *.sublime-workspace
 *.lprof
-
 *.arff
+jquery-1.11.2.min.js
+DryerControl.html
