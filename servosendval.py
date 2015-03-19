@@ -2,6 +2,7 @@ from serial.tools import list_ports
 from time import sleep
 import serial
 from twitter import *
+import string
 
 
 # def twitAuth():
@@ -21,15 +22,18 @@ from twitter import *
 
 def findPort():
 
-    port = [s for s in zip(*list_ports.comports())[0] if 'usbmodem' in s]
+    ports = [s for s in zip(*list_ports.comports())[0] if 'usbmodem' in s]
 
-    if not port:
+    if not ports:
         print "Arduino not detected"
+        print s
         return 0
     else:
-        s = serial.Serial(port[0], 9600)
+        print "Found port: %s" % ports[0]
+        port = string.replace(ports[0], "cu", "tty", 1)
+        print "New port: %s" % port
+        s = serial.Serial(port, 9600)
         sleep(1)
-        s.write('110\n')
         return s
 
 
@@ -51,7 +55,7 @@ def main():
     while True:
         degrees = raw_input("Enter degree value: ")
         s.write(degrees)
-        s.write('\n')
+        print "%s written" % degrees
 
 if __name__ == "__main__":
     main()
