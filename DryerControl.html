@@ -2,7 +2,7 @@
 <head>
 	<style>
 		body {
-			background-image: url("http://images2.layoutsparks.com/1/54381/pretty-fairy-glitter-background.gif");
+			background-image: url("background.gif");
 			color: white;
 		}
 		p {
@@ -21,7 +21,7 @@
 			font-size: 200%;
 			text-transform: uppercase;
 			width: 80%;
-			height: 25%;
+			height: 22%;
 			margin-left: 10%;
 			background: red;
 			-webkit-appearance: none;
@@ -50,40 +50,56 @@
 		#left10 {
 			padding-left: 10%;
 		}
+		#reset {
+			background: green;
+		}
 	</style>
 </head>
 <body>
 	<p class="stretch">Hand dryers nd dragons n shit <(^^,)></p>
 	<form action="#" target="hidden-form" method="post">
-  		<input type=submit value="High" formaction="https://192.168.240.1/arduino/servo/120/20">
+  		<input type=submit value="High" formaction="http://192.168.240.1/arduino/servo/110/20">
 	</form>
 	<form action="#" target="hidden-form" method="post">
-  		<input type=submit value="Medium" formaction="https://192.168.240.1/arduino/servo/120/48">
+  		<input type=submit value="Medium" formaction="http://192.168.240.1/arduino/servo/100/48">
 	</form>
 	<form action="#" target="hidden-form" method="post">
-  		<input type=submit value="Low" formaction="https://192.168.240.1/arduino/servo/120/75">
+  		<input type=submit value="Low" formaction="http://192.168.240.1/arduino/servo/96/75">
+	</form>
+	<form action="#" target="hidden-form" method="post" >
+  		<input type=submit value="Reset" id="reset" formaction="http://192.168.240.1/arduino/servo/160/48">
 	</form>
 
-	<form method="POST" id="left10">
-		Nozzle: <input type="text" id="nozzleVal"name="nozzleVal" />
-		Servo: <input type="text" id="servoVal" name="servoVal" />
-		<input type=submit id="valueForm" value="Submit"></input>
+	<form method="post" id="left10">
+		Nozzle: <input type="text" id="nozzleVal"name="nozzleVal" autofocus/>
+		Motor: <input type="text" id="servoVal" name="servoVal" />
+		<input type=submit id="valueForm" value="Submit" formaction="#" onClick="return funcy();"></input>
 	</form>
 	
 	<IFRAME style="display:none" name="hidden-form"></IFRAME> 
 
-	<script src="jquery-1.11.2.min.js"></script>
-	<script>
-		 $(function() {
-		    $("#valueForm").click(function() {
-		    		var URL = "https://192.168.240.1/arduino/servo/";
-		      	var nozzleVal = $('#nozzleVal').val();
-		      	var servoVal= $('#servoVal').val();
+	<script type="text/javascript" src="jquery-1.11.2.min.js"></script>
+	<script type="text/javascript">
+		function funcy() {
+			var URL = "http://192.168.240.1/arduino/servo/";
+		       	var nozzleVal = $('#nozzleVal').val();
+		       	var servoVal= $('#servoVal').val();
 		      	var URL = URL + nozzleVal + "/" + servoVal;
-		      	alert(URL);
-		      	$.post(URL);
-		    });
-		  });
+		      	$('valueForm').attr(formaction).val() = 
+		}
+		 // $(function() {
+		 //    $("#left10").submit(function() {
+		 //    	var URL = "http://192.168.240.1/arduino/servo/";
+		 //      	var nozzleVal = $('#nozzleVal').val();
+		 //      	var servoVal= $('#servoVal').val();
+		 //      	var URL = URL + nozzleVal + "/" + servoVal;
+		 //      	$('#txt_name').val('bla');
+		 //      	// $.post(URL);
+		 // 	// $("#valueForm").change(function() {
+			// //   $("#dummy").attr("formaction", URL);
+			// // });
+		 //    });
+		 //  });
 	</script>
 </body>
 </html>
