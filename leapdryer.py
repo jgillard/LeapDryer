@@ -11,6 +11,7 @@ import audioop
 import csv
 import datetime
 from serial.tools import list_ports
+import requests
 
 # find Windows/Unix Leap libraries
 src_dir = os.getcwd()
@@ -23,19 +24,19 @@ else:
 import Leap
 
 
-def getArduinoPort():
-    port = [s for s in zip(*list_ports.comports())[0] if 'usbmodem' in s]
-    if not port:
-        print "Arduino not detected"
-        return 0
-    else:
-        if (raw_input("ArduiYes or ArduiNo?").lower()) == "y":
-            s = serial.Serial(port[0], 9600)
-            sleep(1)
-            s.write('110\n')
-            return s
-        else:
-            return 0
+# def getArduinoPort():
+#     port = [s for s in zip(*list_ports.comports())[0] if 'usbmodem' in s]
+#     if not port:
+#         print "Arduino not detected"
+#         return 0
+#     else:
+#         if (raw_input("ArduiYes or ArduiNo?").lower()) == "y":
+#             s = serial.Serial(port[0], 9600)
+#             sleep(1)
+#             s.write('110\n')
+#             return s
+#         else:
+#             return 0
 
 
 def callback(in_data, frame_count, time_info, status):
@@ -149,7 +150,7 @@ def leapCode(controller, frame):
         avY = avY / count
         avZ = avZ / count
 
-        if (debug):
+        if debug:
             lock.acquire()
             print "Frame id: %d, timestamp: %d, hands: %d, fingers: %d" % \
                 (frame.id, frame.timestamp,
@@ -175,12 +176,31 @@ def leapCode(controller, frame):
             prevFrame = frame.id
 
         # send data to over serial port
-        if s != 0:
-            payload = str(int(avZ/10 + 110))
-            print payload
-            s.write(payload)
-            s.write('\n')
-            # print s.readline()
+        # if s != 0:
+        #     payload = str(int(avZ/10 + 110))
+        #     print payload
+        #     s.write(payload)
+        #     s.write('\n')
+        #     # print s.readline()
+
+        nozzleMaxMin = [110, 96]
+        motorMaxMin = [75, 25]
+        URL = "http://192.168.240.1/arduino/servo/"
+        nozzleVal = 0.0875*avZ + 92.5
+        motorVal = -0.3438*avZ + 88.75
+        if nozzleVal > nozzleMaxMin[0]:
+            nozzleVal = nozzleMaxMin[0]
+        elif nozzleVal < nozzleMaxMin[1]:
+            nozzleVal = nozzleMaxMin[1]
+        if motorVal > motorMaxMin[0]:
+            motorVal = motorMaxMin[0]
+        elif motorVal < motorMaxMin[1]:
+            motorVal = motorMaxMin[1]
+
+        URL += "%.0f/%.0f" % (nozzleVal, motorVal)
+        if debug:
+            print URL
+        requests.post(URL)
 
 
 class Listener(Leap.Listener):
@@ -211,7 +231,7 @@ class Listener(Leap.Listener):
         leapCode(controller, frame)
 
 
-s = getArduinoPort()
+# s = getArduinoPort()
 audio = []
 rms = []
 t0 = clock()
