@@ -45,7 +45,8 @@ def callback(in_data, frame_count, time_info, status):
 
 
 def startRecord():
-    print "Why does removing this hang the program?"
+    if debug:
+        print "Why does removing this hang the program?"
     stream = p.open(format=pyaudio.paInt8,
                     channels=1,
                     rate=44100,
@@ -183,24 +184,25 @@ def leapCode(controller, frame):
         #     s.write('\n')
         #     # print s.readline()
 
-        nozzleMaxMin = [110, 96]
-        motorMaxMin = [75, 25]
-        URL = "http://192.168.240.1/arduino/servo/"
-        nozzleVal = 0.0875*avZ + 92.5
-        motorVal = -0.3438*avZ + 88.75
-        if nozzleVal > nozzleMaxMin[0]:
-            nozzleVal = nozzleMaxMin[0]
-        elif nozzleVal < nozzleMaxMin[1]:
-            nozzleVal = nozzleMaxMin[1]
-        if motorVal > motorMaxMin[0]:
-            motorVal = motorMaxMin[0]
-        elif motorVal < motorMaxMin[1]:
-            motorVal = motorMaxMin[1]
+        if arduino:
+            nozzleMaxMin = [110, 96]
+            motorMaxMin = [75, 25]
+            URL = "http://192.168.240.1/arduino/servo/"
+            nozzleVal = 0.0875*avZ + 92.5
+            motorVal = -0.3438*avZ + 88.75
+            if nozzleVal > nozzleMaxMin[0]:
+                nozzleVal = nozzleMaxMin[0]
+            elif nozzleVal < nozzleMaxMin[1]:
+                nozzleVal = nozzleMaxMin[1]
+            if motorVal > motorMaxMin[0]:
+                motorVal = motorMaxMin[0]
+            elif motorVal < motorMaxMin[1]:
+                motorVal = motorMaxMin[1]
 
-        URL += "%.0f/%.0f" % (nozzleVal, motorVal)
-        if debug:
-            print URL
-        requests.post(URL)
+            URL += "%.0f/%.0f" % (nozzleVal, motorVal)
+            if debug:
+                print URL
+            requests.post(URL)
 
 
 class Listener(Leap.Listener):
@@ -244,6 +246,7 @@ debug = args.debug
 lock = threading.Lock()
 prevFrame = 0
 csvData = []
+arduino = True if raw_input("ArduiYes or ArduiNo? ").lower() == "yes" else False
 stream = startRecord()
 
 
