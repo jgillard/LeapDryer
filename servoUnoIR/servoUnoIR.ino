@@ -51,6 +51,4 @@ void loop() {
   
   nozzleServo.write(nozzleVal);
   motorServo.write(motorVal);
-  
-  delay(50);
 }
