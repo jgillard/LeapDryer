@@ -6,38 +6,35 @@ int motorPin = 9;
 int IRpin = 0;
 Servo nozzleServo;
 Servo motorServo;
-QueueArray <int> queue;
+int queue[5];
 
 void setup() {
   Serial.begin(115200);
   nozzleServo.attach(nozzlePin);
   motorServo.attach(motorPin);
-  nozzleServo.write(110);
-  motorServo.write(50);
+  nozzleServo.write(120);
+  motorServo.write(40);
 }
 
 void loop() {
   int dist = analogRead(IRpin);
-  queue.enqueue(dist);
-  if (queue.count() > 10) {
-    queue.dequeue();
-  }
-  QueueArray <int> queueTemp;
-  for (int i = 1; i < queue.count(); i++) {
-    queueTemp.enqueue(queue.dequeue());
-  }
+  int sum = 0;
   int avg = 0;
-  int i = 0;
-  while (queueTemp.isEmpty() == 0) {
-   avg += queueTemp.dequeue();
+  for (int i = 0; i < 5; i++) {
+    queue[i] = queue[i+1];
+    sum += queue[i];
   }
-  avg = avg / i;
+  queue[4] = dist;
+  sum += queue[4];
+  avg = sum / 5;
     
-  Serial.println(dist);
-  Serial.println(avg);
+  Serial.print("Dist: ");
+  Serial.print(dist);
+  Serial.print(" Avg: ");
+  Serial.print(avg);
   
-  int nozzleVal = -0.08 * dist + 127;
-  int motorVal = 0.23 * dist - 50;
+  int nozzleVal = -0.1 * avg + 130;
+  int motorVal = 0.26 * avg - 52;
   
   int nozzleMaxMin[] = {110, 80};
   int motorMaxMin[] = {90, 1};
@@ -46,6 +43,11 @@ void loop() {
   else if (nozzleVal < nozzleMaxMin[1]) { nozzleVal = nozzleMaxMin[1]; }
   if (motorVal > motorMaxMin[0]) { motorVal = motorMaxMin[0]; }
   else if (motorVal < motorMaxMin[1]) { motorVal = motorMaxMin[1]; }
+  
+  Serial.print("\tNozzle: ");
+  Serial.print(nozzleVal);
+  Serial.print(" Motor: ");
+  Serial.println(motorVal);
   
   nozzleServo.write(nozzleVal);
   motorServo.write(motorVal);
