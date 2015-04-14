@@ -30,9 +30,10 @@ def findPort():
         return 0
     else:
         print "Found port: %s" % ports[0]
-        port = string.replace(ports[0], "cu", "tty", 1)
+        port = ports[0]
+        # port = string.replace(ports[0], "cu", "tty", 1)
         print "New port: %s" % port
-        s = serial.Serial(port, 9600)
+        s = serial.Serial(port, 115200)
         sleep(1)
         return s
 
@@ -53,9 +54,13 @@ def main():
     #     sleep(5)
 
     while True:
-        degrees = raw_input("Enter degree value: ")
-        s.write(degrees)
-        print "%s written" % degrees
+        nozzleVal = int(raw_input("Enter nozzle value: "))
+        motorVal = int(raw_input("Enter motor value: "))
+        payload = "%0.d,%0.d" % (nozzleVal, motorVal)
+        s.write(payload)
+        s.write('\n')
+        print payload
+        
 
 if __name__ == "__main__":
     main()
