@@ -106,7 +106,7 @@ class Listener(Leap.Listener):
     def on_frame(self, controller):
         # Get the most recent frame and return if no hands detected
         frame = controller.frame()
-        if frame.hands.is_empty:
+        if frame.hands.is_empty and arduino:
             if handslost == 1:
                 payload = "%0.d,%0.d" % (90, 90)
                 s.write(payload)
@@ -122,7 +122,7 @@ parser.add_argument("-d", "--debug", help="show print statements",
 args = parser.parse_args()
 debug = args.debug
 prevFrame = 0
-arduino = True if raw_input("ArduiYes or ArduiNo? ").lower() == "yes" else False
+arduino = True if raw_input("ArduiYes or ArduiNo? ").lower() == "y" else False
 handslost = 1
 
 
@@ -131,6 +131,7 @@ def main():
     # Create a listener and controller
     listener = Listener()
     controller = Leap.Controller()
+    controller.set_policy_flags(Leap.Controller.POLICY_BACKGROUND_FRAMES | Leap.Controller.POLICY_OPTIMIZE_HMD)
 
     # Have the listener receive events from the controller
     controller.add_listener(listener)
