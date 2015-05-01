@@ -8,11 +8,11 @@
 
                   <!-- RPY -->
                   confVal.innerHTML = hand.confidence;
-                  outputR.innerHTML = "R ".concat(parseInt(hand.palmNormal[0]*90), "*");
+                  outputR.innerHTML = "R ".concat(parseInt(hand.palmNormal[0]*90), &deg);
                   progressR.style.width = 40 + hand.palmNormal[0] * 40 + '%';
-                  outputP.innerHTML = "P ".concat(parseInt(hand.direction[1].toPrecision(2)*90), "*");
+                  outputP.innerHTML = "P ".concat(parseInt(hand.direction[1].toPrecision(2)*90), &deg);
                   progressP.style.width = 40 + hand.direction[1] * 40 + '%';
-                  outputY.innerHTML = "Y ".concat(parseInt(hand.direction[0].toPrecision(2)*90), "*");
+                  outputY.innerHTML = "Y ".concat(parseInt(hand.direction[0].toPrecision(2)*90), &deg);
                   progressY.style.width = 40 + hand.direction[0] * 40 + '%';
 
                   <!-- XYZ -->
