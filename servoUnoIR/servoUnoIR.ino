@@ -1,16 +1,16 @@
 #include <Servo.h>
 
 int nozzlePin = 6;
-int motorPin = 9;
+int motorPin = 5;
 int IRpin = 5;
-int redLED = 3;
+int redLED = 9;
 int yellowLED = 10;
 int greenLED = 11;
 Servo nozzleServo;
 Servo motorServo;
 int queue[5];
 
-int nozzleMaxMin[] = {110, 80};
+int nozzleMaxMin[] = {110, 90};
 int motorMaxMin[] = {90, 1};
 //int farVal = 350;
 //int closeVal = 600;
@@ -24,9 +24,6 @@ void setup() {
   pinMode(redLED, OUTPUT);
   pinMode(yellowLED, OUTPUT);
   pinMode(greenLED, OUTPUT);
-//  digitalWrite(redLED, HIGH);
-//  digitalWrite(yellowLED, HIGH);
-//  digitalWrite(greenLED, HIGH);
   startupLEDs();
 
   // m = (nozzleMaxMin[0] - nozzleMaxMin[1]) / (farVal - closeVal);
@@ -58,8 +55,8 @@ void loop() {
   Serial.print(" Avg: ");
   Serial.print(avg);
   
-  int nozzleVal = -0.12 * dist + 152;
-  int motorVal = 0.356 * dist - 124;
+  int nozzleVal = -0.08 * dist + 138;
+  int motorVal = 0.22 * dist - 75;
   
   if (nozzleVal > nozzleMaxMin[0]) { nozzleVal = nozzleMaxMin[0]; }
   else if (nozzleVal < nozzleMaxMin[1]) { nozzleVal = nozzleMaxMin[1]; }
@@ -76,7 +73,7 @@ void loop() {
   
   if (dist > 500) { digitalWrite(yellowLED, LOW); }
   else { digitalWrite(yellowLED, HIGH); }
-  if (dist > 350) { digitalWrite(greenLED, LOW); }
+  if (dist > 400) { digitalWrite(greenLED, LOW); }
   else { digitalWrite(greenLED, HIGH); }
   
  

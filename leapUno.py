@@ -33,19 +33,9 @@ def getArduinoPort():
         return s
 
 
-def leapCode(controller, frame):
+def IRCode(controller, frame):
     # Process hand(s)
     handlist = frame.hands
-    # z = []
-    # if len(handlist) != 1:
-    #     for hand in handlist:
-    #         z.append(hand.palm_position[1])
-    #     if z[0] >= z[1]:
-    #         handlist = handlist[1]
-    #     else:
-    #         handlist = handlist[0]
-    # else:
-    #     hand = handlist[0]
 
     z = 0
     avgZ = 0
@@ -111,7 +101,7 @@ class Listener(Leap.Listener):
                 payload = "%0.d,%0.d" % (90, 90)
                 s.write(payload)
                 s.write('\n')
-                handlost = 0
+                handslost = 0
         leapCode(controller, frame)
 
 
